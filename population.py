@@ -19,42 +19,60 @@ class Population(object):
     
     def _proportional_fit(self, row_sum, col_sum, tolerance=0.01):
         n_row, n_col = row_sum.size, col_sum.size
+        # convert to matrices
         row_sum.shape = (n_row, 1)
         col_sum.shape = (1, n_col)
+        # the row sum and column sum should be equal
         assert row_sum.sum() == col_sum.sum(), 'Row subsum and column subsum are not equal.'
+        # initialize a table
         table = np.ones([n_row, n_col])
-        for i, j in itertools.product(xrange(n_row), xrange(n_col)):
+        # this table is a upper triangular matrix
+        for i, j in ndrange(n_row, n_col):
             if i > j:
                 table[i,j] = 0.0
         row_err = float('+inf')
+        # check convergence criteria
         while row_err > tolerance:
+            # row proportional fitting
             table = row_sum * (table / table.sum(1).reshape(n_row, 1))
+            # column proportional fitting
             table = col_sum * (table / table.sum(0).reshape(1, n_col))
+            # calculate the differences
             row_diff = table.sum(1).reshape(n_row, 1) - row_sum
             row_err = (row_diff*row_diff).sum()
         return table
 
     def _rand_assignment(self, slot_size):
         slots = []
+        # fill slots with objects to be assigned
         for slot, size in slot_size:
             slots.extend(list(itertools.repeat(slot, size)))
+        # random shuffle the slots, note that the period of random number generator
+        # is mostly always smaller than the numbers of permutations
         random.shuffle(slots)
         return slots
     
-    def _get_location_assignment(self, locations, size):
+    def _get_location_assignment(self, locations, total):
         # a wrapper for the random assignment
         assignment = self._rand_assignment(locations)
-        return assignment[0:size]
+        # only return the first $size$ locations
+        return assignment[0:total]
     
     def create_households(self, properties):
         # calculate the fleet and household size table
         fleet = np.array([freq for car, freq in self.car_ownership])
         hhsize = np.array([freq for size, freq in self.household_size])
+        # fill the joint fleet-hhsize table using proportional fitting
         table = self._proportional_fit(fleet, hhsize)
+        # the available properties should be larger or equal to the number of households
+        ppnum = sum([size for location, size in properties])
+        hhnum = int(round(table.sum()))
+        assert ppnum >= hhnum, "%d available properties < %d households" % (ppnum, hhnum)
         # assign random residential location to the households
-        dwellings = self._get_location_assignment(properties, int(round(table.sum())))
-        # create household pool
+        dwellings = self._get_location_assignment(properties, hhnum)
+        # create a iterator for all the dwellings
         itdwellings = iter(dwellings)
+        # create household pool
         for fleet, hhsize in ndrange(*table.shape):
             for i in xrange(int(round(table[fleet, hhsize]))):
                 self.add_household(hhsize, fleet, itdwellings.next())

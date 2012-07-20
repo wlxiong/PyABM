@@ -19,9 +19,9 @@ class LandUse(object):
             activity.add_location(location, capacity)
         return location
     
-    def get_activity_locations(self, name):
+    def get_locations(self, name):
         return self.demand.activities[name].locations
-    
+
 
 class Location(object):
     "A location is a place where people participate various activities. "

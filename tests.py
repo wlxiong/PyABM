@@ -50,15 +50,15 @@ def test_config():
         'discount': 1.0,
         # correlation between household members
         # 1-dimension dict, i.e. corr[(person 1,person 2)]
-        'corr': {},
+        'corr': {}
         # activity name tokens
-        'tokens': {
-            'residence': 'home',
-            'business': 'work',
-            'school': 'school'
-        }
+        # 'tokens': {
+        #     'residence': 'home',
+        #     'business': 'work',
+        #     'school': 'school'
+        # }
     }
-    logger.debug(pformat(settings))
+    # logger.debug(pformat(settings))
     Config.init(settings)
 
 
@@ -140,22 +140,26 @@ def test_population():
     car_own = [(1, 5000), (2, 3000), (3,2000)]
     
     pop = Population(hh_size, car_own)
-    properties = land.get_activity_locations(Config.tokens['residence'])
+    properties = land.get_locations("home")
     pop.create_households(properties)
     
     print 'random residences'
-    pprint([(hh, hh.home) for hh in pop.households[0:10]])
-    pprint([(hh, hh.home) for hh in pop.households[-11:-1]])
+    pprint([(hh, hh.home) for hh in pop.households[:10]])
+    pprint([(hh, hh.home) for hh in pop.households[-10:]])
     from collections import defaultdict
-    residence_list = defaultdict(int)
+    residences = defaultdict(int)
     for hh in pop.households:
-        residence_list[id(hh.home)] += 1
+        residences[id(hh.home)] += 1
     print 'residences'
-    pprint(sorted(residence_list.items()))
+    residence_list = sorted(residences.items())
+    pprint(residence_list)
     print 'properties'
-    pprint(sorted((id(location), capacity) for location, capacity in properties))
+    property_list = sorted((id(location), capacity) for location, capacity in properties)
+    pprint(property_list)
+    assert residence_list == property_list, "The assigned residences are not the same as the household properties. "
     
     print "%d households are created. " % len(pop.households)
+    print "id of the first household is %d. " % pop.households[0].id
     print "id of the last household is %d. " % pop.households[-1].id
     return pop
 
