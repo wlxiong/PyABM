@@ -7,15 +7,17 @@ import numpy as np
 import math
 import random
 import itertools
-from utils import ndrange
+from utils import ndrange, add_object2pool
 from config import Config
 
 
 class Population(object):
     "Population consists of households. "
-    def __init__(self, household_size, car_ownership):
-        self.household_size, self.car_ownership = sorted(household_size), sorted(car_ownership)
+    def __init__(self, size_freq, fleet_freq):
+        self.size_freq, self.fleet_freq = sorted(size_freq), sorted(fleet_freq)
         self.households = []
+        self.adults = []
+        self.children = []
     
     def _proportional_fit(self, row_sum, col_sum, tolerance=0.01):
         n_row, n_col = row_sum.size, col_sum.size
@@ -42,60 +44,73 @@ class Population(object):
             row_err = (row_diff*row_diff).sum()
         return table
 
-    def _rand_assignment(self, slot_size):
-        slots = []
-        # fill slots with objects to be assigned
-        for slot, size in slot_size:
-            slots.extend(list(itertools.repeat(slot, size)))
+    def _rand_assignment(self, capacity):
+        slot_assginment = []
+        # fill slot_assginment with objects to be assigned
+        for slot, capacity in capacity.items():
+            slot_assginment.extend(list(itertools.repeat(slot, capacity)))
         # random shuffle the slots, note that the period of random number generator
         # is mostly always smaller than the numbers of permutations
-        random.shuffle(slots)
-        return slots
+        random.shuffle(slot_assginment)
+        return slot_assginment
     
-    def _get_location_assignment(self, locations, total):
+    def _get_assignments(self, capacity, total):
+        capsum = sum(capacity.values())
+        assert capsum >= total, "%d available alternatives < %d required slots" % (capsum, total)
         # a wrapper for the random assignment
-        assignment = self._rand_assignment(locations)
+        assignment = self._rand_assignment(capacity)
         # only return the first $size$ locations
         return assignment[0:total]
     
-    def create_households(self, properties):
+    def add_household(self, size, fleet, it_residence, it_office, it_school):
+        # add a new household object
+        hh = add_object2pool(Household, self.households, 
+                             size, fleet, it_residence.next())
+        # the number of workers in the household
+        wknum = 2 if size > 3 else size
+        # the number of students in the household
+        stnum = 0 if size < 3 else size - 2
+        # create adults and children for the household
+        # all the adults are worker and all the children are students
+        for i in xrange(wknum):
+            add_object2pool(hh.add_adult, self.adults, hh.residence, it_office.next())
+        for i in xrange(stnum):
+            add_object2pool(hh.add_child, self.children, hh.residence, it_school.next())
+        return hh
+    
+    def create_households(self, capacities):
         # calculate the fleet and household size table
-        fleet = np.array([freq for car, freq in self.car_ownership])
-        hhsize = np.array([freq for size, freq in self.household_size])
+        fleet_array = np.array([freq for fleet, freq in self.fleet_freq])
+        size_array  = np.array([freq for size, freq in self.size_freq])
         # fill the joint fleet-hhsize table using proportional fitting
-        table = self._proportional_fit(fleet, hhsize)
-        # the available properties should be larger or equal to the number of households
-        ppnum = sum([size for location, size in properties])
-        hhnum = int(round(table.sum()))
-        assert ppnum >= hhnum, "%d available properties < %d households" % (ppnum, hhnum)
-        # assign random residential location to the households
-        dwellings = self._get_location_assignment(properties, hhnum)
-        # create a iterator for all the dwellings
-        itdwellings = iter(dwellings)
-        # create household pool
-        for fleet, hhsize in ndrange(*table.shape):
-            for i in xrange(int(round(table[fleet, hhsize]))):
-                self.add_household(hhsize, fleet, itdwellings.next())
-    
-    def add_household(self, size, fleet, home):
-        id_ = len(self.households)
-        hh = Household(id_, size, fleet, home)
-        self.households.append(hh)
-        
-    
-    def get_home(self, arg):
-        pass
-    
-    def get_work(self, arg):
-        pass
-    
-    def get_school(self, arg):
-        pass
+        table = self._proportional_fit(fleet_array, size_array)
+        # calculate the number of households
+        hhnum  = int(round(table.sum()))
+        # calculate the number of workers
+        # if the size of a household is one, this one person is a worker
+        # if the size of a household is larger than one, there a two workers
+        wknum = sum([(2 if size > 3 else size) * freq for size, freq in self.size_freq])
+        # calculate the number of students, all the other persons are students
+        stnum = sum([(0 if size < 3 else size - 2) * freq for size, freq in self.size_freq])
+        # assign random dwelling unit to the households
+        residences = self._get_assignments(capacities["home"], hhnum)
+        # assign random work place to the workers
+        offices = self._get_assignments(capacities["work"], wknum)
+        # assgin random school to the students
+        schools = self._get_assignments(capacities["school"], stnum)
+        # create iterators for all the locations
+        it_residence, it_office, it_school = iter(residences), iter(offices), iter(schools)
+        # create a household pool
+        for i, j in ndrange(*table.shape):
+            # create households with the same size and fleet
+            for _ in xrange(int(round(table[i, j]))):
+                self.add_household(self.size_freq[j][0], self.fleet_freq[i][0], 
+                                   it_residence, it_office, it_school)
 
 
 class Household(object):
-    def __init__(self, id_, size, fleet, home):
-        self.id, self.size, self.home, self.fleet = id_, size, home, fleet
+    def __init__(self, id_, size, fleet, residence):
+        self.id, self.size, self.residence, self.fleet = id_, size, residence, fleet
         self.adults = []
         self.children = []
     
@@ -105,18 +120,22 @@ class Household(object):
     def __repr__(self):
         return "HH%d" % self.id
     
-    def add_adult(self, home, work=None, maintenance=None, discretionary=None):
-        self.adults.append(Adult(home, work))
+    def add_adult(self, id_, residence, office=None, maintenance=None, discretionary=None):
+        adult = Adult(id_, residence, office, maintenance, discretionary)
+        self.adults.append(adult)
+        return adult
     
-    def add_child(self, home, school=None, discretionay=None):
-        self.children.append(Child(home, school))
+    def add_child(self, id_, residence, school=None, discretionay=None):
+        child = Child(id_, residence, school, discretionay)
+        self.children.append(child)
+        return child
 
 
 class Individual(object):
-    """ Each individual has his/her own (home, work/school) pair. 
+    """ Each individual has his/her own (residence, office/school) pair. 
     """
-    def __init__(self, id_, home, mandatory):
-        self.id, self.home, self.mandatory = id_, home, mandatory
+    def __init__(self, id_, residence):
+        self.id, self.residence = id_, residence
 
     def __repr__(self):
         return "IN%d" % self.id
@@ -126,11 +145,13 @@ class Individual(object):
 
 
 class Adult(Individual):
-    def __init__(self, id_, home, work, discretionary, maintenance):
-        super.__init__(id_, home, work)
+    def __init__(self, id_, residence, office, maintenance, discretionary):
+        super(Adult, self).__init__(id_, residence)
+        self.office, self.maintenance, self.discretionary = office, maintenance, discretionary
 
 
 class Child(Individual):
-    def __init__(self, id_, home, school, discretionary):
-        super.__init__(id_, home, school)
+    def __init__(self, id_, residence, school, discretionary):
+        super(Child, self).__init__(id_, residence)
+        self.school, self.discretionay = school, discretionary
 
