@@ -28,9 +28,16 @@ def sorted_dict_items(adict):
 def ndrange(*args):
     return itertools.product(*map(xrange, args))
 
-def create_objects(creater, args, kwargs={}):
+def create_objects(creater, args):
     for arg in args:
-        creater(*arg, **kwargs)
+        creater(*arg)
+
+def add_object2pool(creater, pool, *args):
+    id_ = len(pool)
+    aug_args = (id_,) + args
+    obj = creater(*aug_args)
+    pool.append(obj)
+    return obj
 
 def constant_factory(value):
     return itertools.repeat(value).next
