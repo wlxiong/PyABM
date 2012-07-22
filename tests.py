@@ -75,14 +75,14 @@ def test_demand():
     ]
     create_objects(dm.add_activity,activity_data)
     print 'activities:'
-    pprint(dm.activities)
+    pprint(dm.activities.items())
     return dm
 
 
 def test_network():
     from network import Network
-    net = Network()
     
+    net = Network()
     street_data = [
         [1,      3,      40,     3000,      40.0],
         [1,      5,      20,     2000,      15.0],
@@ -118,45 +118,56 @@ def test_landuse():
     net = test_network()
     land = LandUse(dm, net)
     location_data = [
-        [10,   1,   {'work': 4000, 'home': 1000, 'school': 5000}],
-        [20,   2,   {'work': 4000, 'home': 1000, 'school': 5000}],
-        [30,   3,   {'work': 4000, 'home': 2000, 'school': 5000}],
-        [40,   4,   {'work': 4000, 'home': 2000, 'school': 5000}],
-        [50,   5,   {'work': 4000, 'home': 2000, 'school': 5000}],
-        [60,   6,   {'work': 4000, 'home': 2000, 'school': 5000}]
+        [100, 1,   {'work': 4000, 'home': 1000, 'school': 5000}],
+        [200, 2,   {'work': 4000, 'home': 1000, 'school': 5000}],
+        [300, 3,   {'work': 4000, 'home': 2000, 'school': 5000}],
+        [400, 4,   {'work': 4000, 'home': 2000, 'school': 5000}],
+        [500, 5,   {'work': 4000, 'home': 2000, 'school': 5000}],
+        [600, 6,   {'work': 4000, 'home': 2000, 'school': 5000}]
     ]
     create_objects(land.add_location, location_data)
-    print "%d locations: " % len(land.locations)
-    for location in land.locations:
-        print "%s" % (str(location))
+    print "location capacities"
+    pprint(land.location_capacities.items())
+    print "activity capacities"
+    pprint(land.activity_capacities.items())
     return land
 
 
 def test_population():
+    def count_locations(pool, location):
+        from collections import defaultdict
+        
+        print "8 random locations"
+        print [(obj, obj.__getattribute__(location)) for obj in pool[:4]]
+        print [(obj, obj.__getattribute__(location)) for obj in pool[-4:]]
+        print "%d location counts" % len(pool)
+        counts = defaultdict(int)
+        for obj in pool:
+            counts[id(obj.__getattribute__(location))] += 1
+        return sorted(counts.items())
+    
     from population import Population
     
     land = test_landuse()
-    hh_size = [(1, 1000), (2, 3000), (3,4000), (4, 2000)]
-    car_own = [(1, 5000), (2, 3000), (3,2000)]
+    hhsize = [(1, 1000), (2, 3000), (3,4000), (4, 2000)]
+    fleet = [(1, 5000), (2, 3000), (3,2000)]
+    print "household size"
+    pprint(hhsize)
+    print "household fleet size"
+    pprint(fleet)
     
-    pop = Population(hh_size, car_own)
-    properties = land.get_locations("home")
-    pop.create_households(properties)
+    pop = Population(hhsize, fleet)
+    capacities = land.get_location_capacities()
+    print "capacities"
+    pprint(capacities)
+    pop.create_households(capacities)
     
-    print 'random residences'
-    pprint([(hh, hh.home) for hh in pop.households[:10]])
-    pprint([(hh, hh.home) for hh in pop.households[-10:]])
-    from collections import defaultdict
-    residences = defaultdict(int)
-    for hh in pop.households:
-        residences[id(hh.home)] += 1
-    print 'residences'
-    residence_list = sorted(residences.items())
-    pprint(residence_list)
-    print 'properties'
-    property_list = sorted((id(location), capacity) for location, capacity in properties)
-    pprint(property_list)
-    assert residence_list == property_list, "The assigned residences are not the same as the household properties. "
+    print "residences"
+    pprint(count_locations(pop.households, "residence"))
+    print "offices"
+    pprint(count_locations(pop.adults, "office"))
+    print "schools"
+    pprint(count_locations(pop.children, "school"))
     
     print "%d households are created. " % len(pop.households)
     print "id of the first household is %d. " % pop.households[0].id
@@ -166,10 +177,11 @@ def test_population():
 
 def main():
     test_config()
-    dm0 = test_demand()
-    net0 = test_network()
-    path0 = test_router()
-    land0 = test_landuse()
+    # dm0 = test_demand()
+    # net0 = test_network()
+    # gnet0 = test_drawing()
+    # path0 = test_router()
+    # land0 = test_landuse()
     num_hh = test_population()
 
 
