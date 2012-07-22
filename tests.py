@@ -97,7 +97,15 @@ def test_network():
     pprint(net.nodes)
     return net
 
+
+def test_drawing():
+    from drawing import GNetwork
     
+    net = test_network()
+    gnet = GNetwork(net)
+    gnet.draw('gnet.png')
+
+
 def test_router():
     from router import find_shortest_path
     
