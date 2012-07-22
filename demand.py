@@ -36,8 +36,7 @@ class Activity(object):
         self.id, self.name = id_, name
         # utility function parameters
         self.U0, self.Um, self.Sigma, self.Lambda, self.Xi = U0, Um, Sigma, Lambda, Xi
-        # spatial and temproal constraints
-        self.locations = []
+        # temproal constraints
         self.time_window = (Time.min2slice(time_window[0]), Time.min2slice(time_window[1]))
         self.min_duration = Time.min2slice(min_duration)
 
@@ -49,9 +48,6 @@ class Activity(object):
     
     def __eq__(self, other):
         return self.id == other.id
-
-    def add_location(self, location, capacity):
-        self.locations.append((location, capacity))
 
     def _marginal_util(self, time, elapsed=0):
         "The marginal activity utility is a function of the current time and the elapsed time. "

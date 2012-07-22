@@ -12,9 +12,11 @@ from utils import Time
 class Network(object):
     "Network is a pool of nodes and edges. "
     def __init__(self):
-        self.nodes = {}
         self.edges = []
         self.trans = []
+        self.nodes = {}
+        self.stops = {}
+        self.locations = {}
     
     def get_node(self, id_):
         if id_ not in self.nodes:
@@ -23,8 +25,13 @@ class Network(object):
     
     def get_stop(self, id_):
         if id_ not in self.nodes:
-            self.nodes[id_] = Stop(id_)
-        return self.nodes[id_]
+            self.stops[id_] = self.nodes[id_] = Stop(id_)
+        return self.stops[id_]
+    
+    def get_location(self, id_):
+        if id_ not in self.nodes:
+            self.locations[id_] = self.nodes[id_] = Location(id_)
+        return self.locations[id_]
     
     def add_oneway_street(self, head_id, tail_id, drive_time, capacity, length):
         head = self.get_node(head_id)
@@ -147,10 +154,22 @@ class Sidewalk(Edge):
         return walk_time * self.cost_unit
 
 
+class Location(Node):
+    "A location is a place where people participate various activities. "
+    def __init__(self, id_):
+        super(Location, self).__init__(id_)
+    
+    def __repr__(self):
+        return "LC%d" % self.id
+
+
 class Stop(Node):
     "A stop has a id and a list of lines passing by it. "
     def __init__(self, id_):
         super(Stop, self).__init__(id_)
+    
+    def __repr__(self):
+        return "ST%d" % self.id
 
 
 class Transit(object):
