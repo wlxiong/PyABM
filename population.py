@@ -72,9 +72,9 @@ class Population(object):
         stnum = 0 if size < 3 else size - 2
         # create adults and children for the household
         # all the adults are worker and all the children are students
-        for i in xrange(wknum):
+        for _ in xrange(wknum):
             add_object2pool(hh.add_adult, self.adults, hh.residence, it_office.next())
-        for i in xrange(stnum):
+        for _ in xrange(stnum):
             add_object2pool(hh.add_child, self.children, hh.residence, it_school.next())
         return hh
     

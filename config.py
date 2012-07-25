@@ -7,14 +7,14 @@ class Config(object):
     # total minutes in 24 hours
     DAY = 1440
     # equivalent minutes of a tick
-    TICK = 20
+    TIMEUNIT = 20
     
     @classmethod
     def init(cls, settings):
         for var in settings:
             setattr(cls, var, settings[var])
-        # the maximum value of timeslice
-        cls.MAXTICK = cls.HORIZON // cls.TICK
+        # the maximum value of tick
+        cls.MAXTICK = cls.HORIZON // cls.TIMEUNIT
         # convert time unit from minute to hour
         cls.min2hr = 1.0/60.0
         cls.ALPHA_in    *= cls.min2hr
@@ -24,7 +24,7 @@ class Config(object):
 
 
 def main():
-    print Config.TICK, Config.DAY
+    print Config.TIMEUNIT, Config.DAY
 
 
 if __name__ == '__main__':

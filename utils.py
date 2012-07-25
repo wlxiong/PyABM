@@ -44,18 +44,18 @@ def constant_factory(value):
 
 
 class Time(object):
-    # conversion of timeslice and minutes
+    # conversion of tick and minutes
     @classmethod
-    def min2slice(cls, minute):
+    def min2tick(cls, minute):
         if math.isinf(minute):
             return minute
-        return int(math.floor((minute / Config.TICK) + 0.5))
+        return int(math.floor((minute / Config.TIMEUNIT) + 0.5))
 
     @classmethod
-    def slice2min(cls, timeslice):
-        if math.isinf(timeslice):
-            return timeslice
-        return float(timeslice) * Config.TICK
+    def tick2min(cls, tick):
+        if math.isinf(tick):
+            return tick
+        return float(tick) * Config.TIMEUNIT
 
 
 def main():
