@@ -37,8 +37,8 @@ class Activity(object):
         # utility function parameters
         self.U0, self.Um, self.Sigma, self.Lambda, self.Xi = U0, Um, Sigma, Lambda, Xi
         # temproal constraints
-        self.time_window = (Time.min2slice(time_window[0]), Time.min2slice(time_window[1]))
-        self.min_duration = Time.min2slice(min_duration)
+        self.time_window = (Time.min2tick(time_window[0]), Time.min2tick(time_window[1]))
+        self.min_duration = Time.min2tick(min_duration)
 
     def __repr__(self):
         return "AC%d" % self.id
@@ -56,15 +56,18 @@ class Activity(object):
             math.pow(1.0+math.exp( -self.Sigma*(time-self.Xi) ), self.Lambda+1.0) )
         return self.U0 + nominator/denominator
 
-    def discrete_util(self, timeslice):
-        lower = Time.slice2min(timeslice) - Config.TICK/2.0
-        upper = lower + Config.TICK
-        if timeslice == 0:
-            util = quad(self._marginal_util, [0.0, Config.TICK/2.0]) + \
-                   quad(self._marginal_util, [Config.DAY-Config.TICK/2.0, Config.DAY])
+    def discrete_util(self, tick):
+        lower = Time.tick2min(tick) - Config.TIMEUNIT/2.0
+        upper = lower + Config.TIMEUNIT
+        if tick == 0:
+            util = quad(self._marginal_util, [0.0, Config.TIMEUNIT/2.0]) + \
+                   quad(self._marginal_util, [Config.DAY-Config.TIMEUNIT/2.0, Config.DAY])
         else:
             util = quad(self._marginal_util, [lower, upper])
         return util
+    
+    def calc_schedule_delay(self, tick):
+        return 0.0
 
 
 class Mandatory(Activity):
@@ -74,9 +77,9 @@ class Mandatory(Activity):
         self.pref_timing, self.penalty_buffer = pref_timing, penalty_buffer
         self.early_penalty, self.late_penalty = early_penalty, late_penalty
     
-    def calc_schedule_delay(self, timeslice):
-        early_time = self.pref_timing - Time.slice2min(timeslice)
-        late_time  = Time.slice2min(timeslice) - self.pref_timing
+    def calc_schedule_delay(self, tick):
+        early_time = self.pref_timing - Time.tick2min(tick)
+        late_time  = Time.tick2min(tick) - self.pref_timing
         if early_time > self.penalty_buffer:
             return early_time * self.early_penalty
         if late_time > self.penalty_buffer:
