@@ -97,6 +97,7 @@ class Edge(object):
     "Edge is the base class for road and sidewalk. "
     def __init__(self, id_, head, tail):
         self.id, self.head, self.tail = id_, head, tail
+        self.head.add_adj_edge(self)
 
     def __eq__(self, other):
         return self.id == other.id
@@ -121,7 +122,6 @@ class Street(Edge):
     def __init__(self, id_, head, tail, drive_time, capacity, length, cost_unit):
         super(Street, self).__init__(id_, head, tail)
         self.drive_time, self.capacity, self.length, self.cost_unit = drive_time, capacity, length, cost_unit
-        self.head.add_adj_edge(self)
 
     def calc_travel_time(self, flow):
         if flow / self.capacity > 4.0:
@@ -140,7 +140,6 @@ class Sidewalk(Edge):
     """
     def __init__(self, id_, head, tail, walk_time, capacity, cost_unit):
         super(Sidewalk, self).__init__(id_, head, tail)
-        self.head.add_adj_edge(self)
         self.walk_time, self.capacity, self.cost_unit = walk_time, capacity, cost_unit
 
     def calc_travel_time(self, flow):
