@@ -28,9 +28,13 @@ def sorted_dict_items(adict):
 def ndrange(*args):
     return itertools.product(*map(xrange, args))
 
-def create_objects(creater, args):
-    for arg in args:
-        creater(*arg)
+def create_objects(creater, args_list):
+    for args in args_list:
+        creater(*args)
+
+# TODO new class: ObjPool
+# demand, network, landuse, popoluation can be inherited from it
+# then add_object2pool() is a method defined in ObjPool
 
 def add_object2pool(creater, pool, *args):
     id_ = len(pool)
@@ -61,7 +65,7 @@ class Time(object):
 def main():
     import numpy as np
     ij = (2, 4)
-    for i, j in product_range(*ij):
+    for i, j in ndrange(*ij):
         print (i, j)
     for i, j in np.ndindex(*ij):
         print (i, j)

@@ -84,4 +84,4 @@ def find_shortest_path(net, depart_time, start, end=None):
         # if end node is not given, extract the shortest paths from start to all the other nodes
         all_paths = get_all_shortest_paths(start, prev, time)
         end_ids = [path[-1][0].tail.id for path in all_paths]
-        return {'path': dict(zip(end_ids, all_paths)), 'cost': cost, 'time': time}
+        return {'path': dict(zip(end_ids, all_paths)), 'cost': dict(cost), 'time': dict(time)}
