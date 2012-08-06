@@ -6,24 +6,25 @@ from utils import Time
 from config import Config
 from collections import OrderedDict
 
+
 class Demand(object):
     "Demand is a pool of activities. "
     def __init__(self):
         self.activities = OrderedDict()
-        self.programs = []
+        self.programs = {}
 
-    def add_activity(self, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration):
+    def add_activity(self, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration=0.0):
         id_ = len(self.activities)
         self.activities[name] = Activity(id_, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration)
     
-    def add_program(self, activity_list):
-        id_ = len(self.programs)
-        self.programs.append(Program(id_))
+    def add_program(self, id_, activity_names):
+        activities = [self.activities[name] for name in activity_names]
+        self.programs[id_] = Program(id_, activities)
 
 
 class Activity(object):
     "Each activity is specified as a set of confeters which determine its marginal utility. "
-    def __init__(self, id_, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration=0.0):
+    def __init__(self, id_, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration):
         ''' U0 is the baseline utility level of acivity. 
             Um is the maximum utility of activity. 
             Sigma determines the slope or steepness of the curve. 
@@ -85,25 +86,10 @@ class Mandatory(Activity):
         if late_time > self.penalty_buffer:
             return late_time * self.late_penalty
         return 0.0
-
-
-class Maintenance(Activity):
-    def __init__(self, id_, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration):
-        super(Maintenance, self).__init__(self, id_, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration)
-
-
-class Discretionary(Activity):
-    def __init__(self, id_, name, U0, Um, Sigma, Lambda, Xi, time_window):
-        super(Discretionary, self).__init__(id_, name, U0, Um, Sigma, Lambda, Xi, time_window)
-
-
-class In_Home(Activity):
-    def __init__(self, id_, name, U0, Um, Sigma, Lambda, Xi, time_window):
-        super(In_Home, self).__init__(id_, name, U0, Um, Sigma, Lambda, Xi, time_window)
         
 
-class Program(object):
-    def _init__(self, id_):
-        pass
-    
+class Program(list):
+    def __init__(self, id_, iterable):
+        self.id = id_
+        super(Program, self).__init__(iterable)
     
