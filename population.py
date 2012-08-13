@@ -62,10 +62,12 @@ class Population(object):
         # only return the first $size$ locations
         return assignment[0:total]
     
-    def add_household(self, size, fleet, it_residence, it_office, it_school):
+    def add_household(self, size, fleet, it_residence, it_office, it_school, 
+                      maintenance=None, discretionary=None):
         # add a new household object
         hh = add_object2pool(Household, self.households, 
-                             size, fleet, it_residence.next())
+                             size, fleet, it_residence.next(),
+                             maintenance, discretionary)
         # the number of workers in the household
         wknum = 2 if size > 3 else size
         # the number of students in the household
@@ -109,8 +111,9 @@ class Population(object):
 
 
 class Household(object):
-    def __init__(self, id_, size, fleet, residence):
+    def __init__(self, id_, size, fleet, residence, maintenance, discretionary):
         self.id, self.size, self.residence, self.fleet = id_, size, residence, fleet
+        self.maintenance, self.discretionary = maintenance, discretionary
         self.adults = []
         self.children = []
     
@@ -120,13 +123,13 @@ class Household(object):
     def __repr__(self):
         return "HH%d" % self.id
     
-    def add_adult(self, id_, residence, office=None, maintenance=None, discretionary=None):
-        adult = Adult(id_, residence, office, maintenance, discretionary)
+    def add_adult(self, id_, residence, office=None):
+        adult = Adult(id_, residence, office)
         self.adults.append(adult)
         return adult
     
-    def add_child(self, id_, residence, school=None, discretionay=None):
-        child = Child(id_, residence, school, discretionay)
+    def add_child(self, id_, residence, school=None):
+        child = Child(id_, residence, school)
         self.children.append(child)
         return child
 
@@ -145,13 +148,13 @@ class Individual(object):
 
 
 class Adult(Individual):
-    def __init__(self, id_, residence, office, maintenance, discretionary):
+    def __init__(self, id_, residence, office):
         super(Adult, self).__init__(id_, residence)
-        self.office, self.maintenance, self.discretionary = office, maintenance, discretionary
+        self.office = office
 
 
 class Child(Individual):
-    def __init__(self, id_, residence, school, discretionary):
+    def __init__(self, id_, residence, school):
         super(Child, self).__init__(id_, residence)
-        self.school, self.discretionay = school, discretionary
+        self.school = school
 
