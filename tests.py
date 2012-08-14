@@ -10,7 +10,7 @@ def test_config():
     from config import Config
     
     settings = {
-        'TICK': 20,
+        'TIMEUNIT': 20,
         'HORIZON': 1440,
         # variance tolerance of preferred activitiy timing
         'DELTA': 0.25 * 60.0,
@@ -66,16 +66,46 @@ def test_demand():
     from demand import Demand
     
     dm = Demand()
+    # in-home activities and out-of-home activities
+    #   madantory activities: work/business, school/college
+    #   maintenance activities: escort passengers, shopping
+    #   discretionary activities: eating out, visiting friends
     activity_data = [
         ['home',             1.0,  600, -0.010, 1.0,   720, (  0, 1440), 360],
         ['work',             0.0, 1600,  0.010, 1.0,   720, (240, 1440), 240],
         ['school',           0.0, 1600,  0.010, 1.0,   720, (240, 1440), 240],
-        ['dinner',           0.0,  420,  0.010, 1.0,  1170, (720, 1440),  10],
-        ['shopping',         0.0,  500,  0.010, 1.0,  1110, (720, 1440),  10]
+        ['eating',           0.0,  420,  0.010, 1.0,  1170, (720, 1440),  10],
+        ['shopping',         0.0,  500,  0.010, 1.0,  1110, (720, 1440),  10],
+        ['visiting',         0.0,  500,  0.010, 1.0,  1110, (720, 1440),  10],
+        ['escorting',         0.0,  500,  0.010, 1.0,  1110, (720, 1440),  10]
     ]
-    create_objects(dm.add_activity,activity_data)
+    create_objects(dm.add_activity, activity_data)
     print 'activities:'
     pprint(dm.activities.items())
+    
+    # intra-household interactions
+    #   entire day level: 
+    #     staying at home, absent together
+    #     non-madantory DAP together (day-off for major shopping)
+    #   episode level:
+    #     shared activity
+    #     escorting (children to school)
+    #     allocation of maintenance task (shopping)
+    #     car allocation
+    # types of joint travel
+    #   fully-joint tour, joint outbound, joint inbound
+    #   drop-off/get-off, pick-up/get-in
+    program_data = [
+        [0, []],
+        [1, ['shopping']],
+        [2, ['escorting']],
+        [3, ['eating']],
+        [4, ['visiting']],
+        [5, ['shopping', 'eating']]
+    ]
+    create_objects(dm.add_program, program_data)
+    print 'programs:'
+    pprint(dm.programs.items())
     return dm
 
 
@@ -126,6 +156,7 @@ def test_landuse():
     net = test_network()
     land = LandUse(dm, net)
     location_data = [
+        # centriod, access, activities
         [100, 1,   {'work': 4000, 'home': 1000, 'school': 5000}],
         [200, 2,   {'work': 4000, 'home': 1000, 'school': 5000}],
         [300, 3,   {'work': 4000, 'home': 2000, 'school': 5000}],
@@ -142,40 +173,47 @@ def test_landuse():
 
 
 def test_population():
-    def count_locations(pool, location):
+    def count_objects(pool, target):
         from collections import defaultdict
         
-        print "8 random locations"
-        print [(obj, obj.__getattribute__(location)) for obj in pool[:4]]
-        print [(obj, obj.__getattribute__(location)) for obj in pool[-4:]]
-        print "%d location counts" % len(pool)
+        print "random targets"
+        print [(obj, obj.__getattribute__(target)) for obj in pool[:10]]
+        print [(obj, obj.__getattribute__(target)) for obj in pool[-10:]]
+        print "%d target counts" % len(pool)
         counts = defaultdict(int)
         for obj in pool:
-            counts[id(obj.__getattribute__(location))] += 1
+            counts[id(obj.__getattribute__(target))] += 1
         return sorted(counts.items())
     
     from population import Population
     
     land = test_landuse()
+    demand = test_demand()
+    # total number of households: 10,000
+    prog = [(0, 1000), (1, 2000), (2, 3000), (3, 2000), (4, 1000), (5, 1000)]
     hhsize = [(1, 1000), (2, 3000), (3,4000), (4, 2000)]
     fleet = [(1, 5000), (2, 3000), (3,2000)]
+    print "activity program choice"
+    pprint(prog)
     print "household size"
     pprint(hhsize)
     print "household fleet size"
     pprint(fleet)
     
-    pop = Population(hhsize, fleet)
+    pop = Population(hhsize, fleet, prog)
     capacities = land.get_location_capacities()
     print "capacities"
     pprint(capacities)
-    pop.create_households(capacities)
+    pop.create_households(capacities, demand.programs)
     
+    print "programs"
+    pprint(count_objects(pop.households, "program"))
     print "residences"
-    pprint(count_locations(pop.households, "residence"))
+    pprint(count_objects(pop.households, "residence"))
     print "offices"
-    pprint(count_locations(pop.adults, "office"))
+    pprint(count_objects(pop.adults, "office"))
     print "schools"
-    pprint(count_locations(pop.children, "school"))
+    pprint(count_objects(pop.children, "school"))
     
     print "%d households are created. " % len(pop.households)
     print "id of the first household is %d. " % pop.households[0].id
@@ -187,8 +225,8 @@ def main():
     test_config()
     # dm0 = test_demand()
     # net0 = test_network()
-    # gnet0 = test_drawing()
-    # path0 = test_router()
+    gnet0 = test_drawing()
+    path0 = test_router()
     # land0 = test_landuse()
     num_hh = test_population()
 
