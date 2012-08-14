@@ -63,11 +63,11 @@ class Population(object):
         return assignment[0:total]
     
     def add_household(self, size, fleet, it_residence, it_office, it_school, 
-                      maintenance=None, discretionary=None):
+                      program=None):
         # add a new household object
         hh = add_object2pool(Household, self.households, 
                              size, fleet, it_residence.next(),
-                             maintenance, discretionary)
+                             program)
         # the number of workers in the household
         wknum = 2 if size > 3 else size
         # the number of students in the household
@@ -111,9 +111,9 @@ class Population(object):
 
 
 class Household(object):
-    def __init__(self, id_, size, fleet, residence, maintenance, discretionary):
+    def __init__(self, id_, size, fleet, residence, program):
         self.id, self.size, self.residence, self.fleet = id_, size, residence, fleet
-        self.maintenance, self.discretionary = maintenance, discretionary
+        self.program = program
         self.adults = []
         self.children = []
     
