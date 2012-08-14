@@ -93,3 +93,5 @@ class Program(list):
         self.id = id_
         super(Program, self).__init__(iterable)
     
+    def __repr__(self):
+        return "PG%d" % self.id

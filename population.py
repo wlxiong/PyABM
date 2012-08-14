@@ -13,8 +13,9 @@ from config import Config
 
 class Population(object):
     "Population consists of households. "
-    def __init__(self, size_freq, fleet_freq):
+    def __init__(self, size_freq, fleet_freq, program_freq):
         self.size_freq, self.fleet_freq = sorted(size_freq), sorted(fleet_freq)
+        self.program_freq = program_freq
         self.households = []
         self.adults = []
         self.children = []
@@ -62,8 +63,7 @@ class Population(object):
         # only return the first $size$ locations
         return assignment[0:total]
     
-    def add_household(self, size, fleet, it_residence, it_office, it_school, 
-                      program=None):
+    def add_household(self, size, fleet, program, it_residence, it_office, it_school):
         # add a new household object
         hh = add_object2pool(Household, self.households, 
                              size, fleet, it_residence.next(),
@@ -80,7 +80,7 @@ class Population(object):
             add_object2pool(hh.add_child, self.children, hh.residence, it_school.next())
         return hh
     
-    def create_households(self, capacities):
+    def create_households(self, capacities, programs):
         # calculate the fleet and household size table
         fleet_array = np.array([freq for fleet, freq in self.fleet_freq])
         size_array  = np.array([freq for size, freq in self.size_freq])
@@ -94,12 +94,16 @@ class Population(object):
         wknum = sum([(2 if size > 3 else size) * freq for size, freq in self.size_freq])
         # calculate the number of students, all the other persons are students
         stnum = sum([(0 if size < 3 else size - 2) * freq for size, freq in self.size_freq])
+        # assign random activity program to the households
+        program_ids = self._get_assignments(dict(self.program_freq), hhnum)
         # assign random dwelling unit to the households
         residences = self._get_assignments(capacities["home"], hhnum)
         # assign random work place to the workers
         offices = self._get_assignments(capacities["work"], wknum)
         # assgin random school to the students
         schools = self._get_assignments(capacities["school"], stnum)
+        # create iterator for activity programs
+        it_program = iter(program_ids)
         # create iterators for all the locations
         it_residence, it_office, it_school = iter(residences), iter(offices), iter(schools)
         # create a household pool
@@ -107,7 +111,7 @@ class Population(object):
             # create households with the same size and fleet
             for _ in xrange(int(round(table[i, j]))):
                 self.add_household(self.size_freq[j][0], self.fleet_freq[i][0], 
-                                   it_residence, it_office, it_school)
+                                   programs[it_program.next()], it_residence, it_office, it_school)
 
 
 class Household(object):
