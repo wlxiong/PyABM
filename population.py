@@ -107,11 +107,11 @@ class Population(object):
         program_freq = dict([(demand.programs[id_], freq) for id_, freq in self.prog_freq])
         programs = self._get_assignments(program_freq, hhnum)
         # assign random dwelling unit to the households
-        residences = self._get_assignments(land.get_locations("home"), hhnum)
+        residences = self._get_assignments(land.get_capacities("home"), hhnum)
         # assign random work place to the workers
-        offices = self._get_assignments(land.get_locations("work"), wknum)
+        offices = self._get_assignments(land.get_capacities("work"), wknum)
         # assgin random school to the students
-        schools = self._get_assignments(land.get_locations("school"), stnum)
+        schools = self._get_assignments(land.get_capacities("school"), stnum)
         # create iterator for activity programs
         it_program = iter(programs)
         # create iterators for all the locations

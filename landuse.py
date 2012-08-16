@@ -5,8 +5,9 @@ class LandUse(object):
     "Land use pattern determines where the socioeconomic activities take place. "
     def __init__(self, demand, network):
         self.demand, self.network = demand, network
-        self.locations = defaultdict(dict)
-        self.activities = defaultdict(dict)
+        self.capacities = defaultdict(dict)
+        self.activities = defaultdict(list)
+        self.locations = defaultdict(list)
     
     def add_location(self, centroid_id, access_id, activity_capacity):
         # create a new location, multiple by 100 to offset node id
@@ -16,17 +17,24 @@ class LandUse(object):
         # assign activities to the location
         for name, capacity in activity_capacity.items():
             activity = self.demand.get_activity(name)
-            self.locations[name][location] = capacity
-            self.activities[location.id][activity] = capacity
+            self.capacities[name][location] = capacity
+            self.activities[location.id].append(activity)
+            self.locations[name].append(location)
     
-    def get_locations(self, key=None):
+    def get_capacities(self, key=None):
         if key == None:
-            return dict(self.locations)
+            return dict(self.capacities)
         else:
-            return dict(self.locations[key])
+            return self.capacities[key]
     
     def get_activities(self, key=None):
         if key == None:
             return dict(self.activities)
         else:
-            return dict(self.activities[key])
+            return self.activities[key]
+    
+    def get_locations(self, key=None):
+        if key == None:
+            return dict(self.locations)
+        else:
+            return self.locations[key]
