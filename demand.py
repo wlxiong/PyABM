@@ -20,6 +20,12 @@ class Demand(object):
     def add_program(self, id_, activity_names):
         activities = [self.activities[name] for name in activity_names]
         self.programs[id_] = Program(id_, activities)
+    
+    def get_activity(self, name):
+        try:
+            return self.activities[name]
+        except KeyError, e:
+            raise e
 
 
 class Activity(object):
@@ -95,3 +101,6 @@ class Program(list):
     
     def __repr__(self):
         return "PG%d" % self.id
+    
+    def __hash__(self):
+        return hash(repr(self))
