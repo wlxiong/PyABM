@@ -13,12 +13,12 @@ from config import Config
 
 class Population(object):
     "Population consists of households. "
-    def __init__(self, size_freq, fleet_freq, program_freq):
-        self.size_freq, self.fleet_freq = sorted(size_freq), sorted(fleet_freq)
-        self.program_freq = program_freq
+    def __init__(self, size_freq, fleet_freq, prog_freq):
+        self.size_freq, self.fleet_freq, self.prog_freq = sorted(size_freq), sorted(fleet_freq), prog_freq
         self.households = []
         self.adults = []
         self.children = []
+        self.individuals = []
     
     def _proportional_fit(self, row_sum, col_sum, tolerance=0.01):
         n_row, n_col = row_sum.size, col_sum.size
@@ -63,24 +63,33 @@ class Population(object):
         # only return the first $size$ locations
         return assignment[0:total]
     
-    def add_household(self, size, fleet, program, it_residence, it_office, it_school):
+    def add_household(self, size, fleet, demand, it_program, it_residence, it_office, it_school):
         # add a new household object
-        hh = add_object2pool(Household, self.households, 
-                             size, fleet, it_residence.next(),
-                             program)
+        household = add_object2pool(Household, self.households, size, fleet, 
+                                    it_residence.next(), it_program.next())
         # the number of workers in the household
         wknum = 2 if size > 3 else size
         # the number of students in the household
         stnum = 0 if size < 3 else size - 2
+        # the most essential activities
+        ihome   = demand.get_activity("home")
+        iwork   = demand.get_activity("work")
+        ischool = demand.get_activity("school")
         # create adults and children for the household
         # all the adults are worker and all the children are students
         for _ in xrange(wknum):
-            add_object2pool(hh.add_adult, self.adults, hh.residence, it_office.next())
+            program = [ihome, iwork] + household.program
+            adult = add_object2pool(household.add_adult, self.individuals, 
+                                    household.residence, it_office.next(), program)
+            self.adults.append(adult)
         for _ in xrange(stnum):
-            add_object2pool(hh.add_child, self.children, hh.residence, it_school.next())
-        return hh
+            program = [ihome, ischool] + household.program
+            child = add_object2pool(household.add_child, self.individuals, 
+                                    household.residence, it_school.next(), program)
+            self.children.append(child)
+        return household
     
-    def create_households(self, capacities, programs):
+    def create_households(self, land, demand):
         # calculate the fleet and household size table
         fleet_array = np.array([freq for fleet, freq in self.fleet_freq])
         size_array  = np.array([freq for size, freq in self.size_freq])
@@ -95,15 +104,16 @@ class Population(object):
         # calculate the number of students, all the other persons are students
         stnum = sum([(0 if size < 3 else size - 2) * freq for size, freq in self.size_freq])
         # assign random activity program to the households
-        program_ids = self._get_assignments(dict(self.program_freq), hhnum)
+        program_freq = dict([(demand.programs[id_], freq) for id_, freq in self.prog_freq])
+        programs = self._get_assignments(program_freq, hhnum)
         # assign random dwelling unit to the households
-        residences = self._get_assignments(capacities["home"], hhnum)
+        residences = self._get_assignments(land.get_locations("home"), hhnum)
         # assign random work place to the workers
-        offices = self._get_assignments(capacities["work"], wknum)
+        offices = self._get_assignments(land.get_locations("work"), wknum)
         # assgin random school to the students
-        schools = self._get_assignments(capacities["school"], stnum)
+        schools = self._get_assignments(land.get_locations("school"), stnum)
         # create iterator for activity programs
-        it_program = iter(program_ids)
+        it_program = iter(programs)
         # create iterators for all the locations
         it_residence, it_office, it_school = iter(residences), iter(offices), iter(schools)
         # create a household pool
@@ -111,7 +121,7 @@ class Population(object):
             # create households with the same size and fleet
             for _ in xrange(int(round(table[i, j]))):
                 self.add_household(self.size_freq[j][0], self.fleet_freq[i][0], 
-                                   programs[it_program.next()], it_residence, it_office, it_school)
+                                   demand, it_program, it_residence, it_office, it_school)
 
 
 class Household(object):
@@ -127,13 +137,13 @@ class Household(object):
     def __repr__(self):
         return "HH%d" % self.id
     
-    def add_adult(self, id_, residence, office=None):
-        adult = Adult(id_, residence, office)
+    def add_adult(self, id_, residence, office=None, program=None):
+        adult = Adult(id_, residence, office, program)
         self.adults.append(adult)
         return adult
     
-    def add_child(self, id_, residence, school=None):
-        child = Child(id_, residence, school)
+    def add_child(self, id_, residence, school=None, program=None):
+        child = Child(id_, residence, school, program)
         self.children.append(child)
         return child
 
@@ -143,22 +153,34 @@ class Individual(object):
     """
     def __init__(self, id_, residence):
         self.id, self.residence = id_, residence
-
-    def __repr__(self):
-        return "IN%d" % self.id
-
+    
     def __eq__(self, other):
-        return self.id == other.id
+        return repr(self.id) == repr(other.id)
+    
+    def get_workplace(self):
+        pass
 
 
 class Adult(Individual):
-    def __init__(self, id_, residence, office):
+    def __init__(self, id_, residence, office, program):
         super(Adult, self).__init__(id_, residence)
-        self.office = office
+        self.office, self.program = office, program
+    
+    def __repr__(self):
+        return "AD%d" % self.id
+    
+    def get_workplace(self):
+        return self.office
 
 
 class Child(Individual):
-    def __init__(self, id_, residence, school):
+    def __init__(self, id_, residence, school, program):
         super(Child, self).__init__(id_, residence)
-        self.school = school
+        self.school, self.program = school, program
+    
+    def __repr__(self):
+        return "CH%d" % self.id
+    
+    def get_workplace(self):
+        return self.school
 
