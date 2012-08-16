@@ -98,9 +98,9 @@ def test_demand():
     program_data = [
         [0, []],
         [1, ['shopping']],
-        [2, ['escorting']],
         [3, ['eating']],
-        [4, ['visiting']],
+        [2, ['visiting']],
+        [4, ['shopping', 'visiting']],
         [5, ['shopping', 'eating']]
     ]
     create_objects(dm.add_program, program_data)
@@ -157,18 +157,18 @@ def test_landuse():
     land = LandUse(dm, net)
     location_data = [
         # centriod, access, activities
-        [100, 1,   {'work': 4000, 'home': 1000, 'school': 5000}],
-        [200, 2,   {'work': 4000, 'home': 1000, 'school': 5000}],
-        [300, 3,   {'work': 4000, 'home': 2000, 'school': 5000}],
-        [400, 4,   {'work': 4000, 'home': 2000, 'school': 5000}],
-        [500, 5,   {'work': 4000, 'home': 2000, 'school': 5000}],
-        [600, 6,   {'work': 4000, 'home': 2000, 'school': 5000}]
+        [100, 1,   {'work': 4000, 'home': 1000, 'school': 5000, 'shopping': 10000, 'eating': 10000}],
+        [200, 2,   {'work': 4000, 'home': 1000, 'school': 5000, 'shopping': 10000, 'visiting': 10000}],
+        [300, 3,   {'work': 4000, 'home': 2000, 'school': 5000, 'eating':   10000, 'visiting': 10000}],
+        [400, 4,   {'work': 4000, 'home': 2000, 'school': 5000, 'shopping': 10000}],
+        [500, 5,   {'work': 4000, 'home': 2000, 'school': 5000, 'eating':   10000}],
+        [600, 6,   {'work': 4000, 'home': 2000, 'school': 5000, 'visiting': 10000}]
     ]
     create_objects(land.add_location, location_data)
     print "location capacities"
-    pprint(land.location_capacities.items())
+    pprint(land.locations.items())
     print "activity capacities"
-    pprint(land.activity_capacities.items())
+    pprint(land.activities.items())
     return land
 
 
@@ -176,13 +176,14 @@ def test_population():
     def count_objects(pool, target):
         from collections import defaultdict
         
-        print "random targets"
-        print [(obj, obj.__getattribute__(target)) for obj in pool[:10]]
-        print [(obj, obj.__getattribute__(target)) for obj in pool[-10:]]
-        print "%d target counts" % len(pool)
+        print "random objects"
+        print pformat([(obj, obj.__getattribute__(target)) for obj in pool[:5]])
+        print pformat([(obj, obj.__getattribute__(target)) for obj in pool[-5:]])
+        print "object groups"
         counts = defaultdict(int)
         for obj in pool:
-            counts[id(obj.__getattribute__(target))] += 1
+            counts[repr(obj.__getattribute__(target))] += 1
+        print "%d targets" % len(pool)
         return sorted(counts.items())
     
     from population import Population
@@ -193,29 +194,28 @@ def test_population():
     prog = [(0, 1000), (1, 2000), (2, 3000), (3, 2000), (4, 1000), (5, 1000)]
     hhsize = [(1, 1000), (2, 3000), (3,4000), (4, 2000)]
     fleet = [(1, 5000), (2, 3000), (3,2000)]
-    print "activity program choice"
+    print "\nhousehold program choice"
     pprint(prog)
-    print "household size"
+    print "\nhousehold size"
     pprint(hhsize)
-    print "household fleet size"
+    print "\nhousehold fleet size"
     pprint(fleet)
     
     pop = Population(hhsize, fleet, prog)
-    capacities = land.get_location_capacities()
-    print "capacities"
-    pprint(capacities)
-    pop.create_households(capacities, demand.programs)
+    pop.create_households(land, demand)
     
-    print "programs"
+    print "\nhousehold programs"
     pprint(count_objects(pop.households, "program"))
-    print "residences"
+    print "\nindividual programs"
+    pprint(count_objects(pop.individuals, "program"))
+    print "\nresidences"
     pprint(count_objects(pop.households, "residence"))
-    print "offices"
+    print "\noffices"
     pprint(count_objects(pop.adults, "office"))
-    print "schools"
+    print "\nschools"
     pprint(count_objects(pop.children, "school"))
     
-    print "%d households are created. " % len(pop.households)
+    print "\n%d households are created. " % len(pop.households)
     print "id of the first household is %d. " % pop.households[0].id
     print "id of the last household is %d. " % pop.households[-1].id
     return pop
@@ -225,11 +225,12 @@ def main():
     test_config()
     # dm0 = test_demand()
     # net0 = test_network()
-    gnet0 = test_drawing()
-    path0 = test_router()
+    # gnet0 = test_drawing()
+    # path0 = test_router()
     # land0 = test_landuse()
-    num_hh = test_population()
+    # pop0 = test_population()
 
 
 if __name__ == '__main__':
+    # python -m cProfile -s time -o profile.log tests.py <args>
     main()
