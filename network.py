@@ -127,8 +127,8 @@ class Street(Edge):
         if flow / self.capacity > 4.0:
             print "  !! %s: %s / %s > 4.0" % (self, flow, self.capacity)
             # raise PendingDeprecationWarning('Street capacity excess (20x)! ')
-        self.drive_time = Time.min2tick(self.drive_time*(1.0 + .15*math.pow(flow/self.capacity, 4.0)))
-        return self.drive_time
+        travel_time = Time.min2tick(self.drive_time*(1.0 + .15*math.pow(flow/self.capacity, 4.0)))
+        return travel_time
 
     def calc_travel_cost(self, drive_time):
         return drive_time * self.cost_unit
@@ -146,8 +146,8 @@ class Sidewalk(Edge):
         if flow > self.capacity * 8:
             print "%s: %s / %s" % (self, flow, self.capacity)
             # raise PendingDeprecationWarning('Sidewalk capacity excess (8x)! ')
-        self.walk_time = Time.min2tick(self.walk_time*(1.0 + .15*math.pow(flow/self.capacity, 4.0)))
-        return self.walk_time
+        travel_time = Time.min2tick(self.walk_time*(1.0 + .15*math.pow(flow/self.capacity, 4.0)))
+        return travel_time
 
     def calc_travel_cost(self, walk_time):
         return walk_time * self.cost_unit
@@ -208,5 +208,6 @@ class Transit(object):
         if move_flow > self.capacity * 8:
             print "%s: %s / %s" % (self, move_flow, self.capacity)
             # raise PendingDeprecationWarning('Transit line capacity excess (8x)! ')
-        self.travel_cost = in_vehicle_time*(1.0 + .15*math.pow(move_flow/self.capacity, 4.0))
-        return self.travel_cost
+        travel_cost = in_vehicle_time*(1.0 + .15*math.pow(move_flow/self.capacity, 4.0))
+        return travel_cost
+
