@@ -11,7 +11,7 @@ def test_config():
     
     settings = {
         'TIMEUNIT': 20,
-        'HORIZON': 1440,
+        'TIMELENG': 1440,
         # variance tolerance of preferred activitiy timing
         'DELTA': 0.25 * 60.0,
         # the link capacity
@@ -136,24 +136,9 @@ def test_drawing():
     gnet.draw('gnet.png')
 
 
-def test_router():
-    from router import find_shortest_path
-    
-    net = test_network()
-    net.init_flows()
-    path = find_shortest_path(net, 0, net.nodes[1], net.nodes[6])
-    print 'path 1 - 6'
-    pprint(path)
-    paths = find_shortest_path(net, 0, net.nodes[1])
-    print 'paths 1 - *'
-    pprint(paths)
-    return path
-
-def test_landuse():
+def test_landuse(dm, net):
     from landuse import LandUse
     
-    dm = test_demand()
-    net = test_network()
     land = LandUse(dm, net)
     location_data = [
         # centriod, access, activities
@@ -172,7 +157,33 @@ def test_landuse():
     return land
 
 
-def test_population():
+def test_router(net, land):
+    from router import Router
+    
+    net.init_flows()
+    print 'edges'
+    pprint([(edge, str(edge)) for edge in net.edges])
+    path = Router.find_shortest_path(net, 0, net.nodes[1], net.nodes[6])
+    print 'path 1 - 6'
+    pprint(path)
+    path = Router.find_shortest_path(net, 0, net.nodes[6], net.nodes[1])
+    print 'path 6 - 1'
+    pprint(path)
+    paths = Router.find_shortest_path(net, 0, net.nodes[1])
+    print 'paths 1 - *'
+    pprint(paths)
+    paths = Router.find_shortest_path(net, 0, net.nodes[100])
+    print 'paths 100 - *'
+    pprint(paths)
+    router = Router(net, land)
+    router.build_shortest_paths()
+    path = router.get_shortest_path(0, 100, 600)
+    print 'path 100 - 600'
+    pprint(path)
+    return router
+
+
+def test_population(dm, land):
     def count_objects(pool, target):
         from collections import defaultdict
         
@@ -188,8 +199,6 @@ def test_population():
     
     from population import Population
     
-    land = test_landuse()
-    demand = test_demand()
     # total number of households: 10,000
     prog = [(0, 1000), (1, 2000), (2, 3000), (3, 2000), (4, 1000), (5, 1000)]
     hhsize = [(1, 1000), (2, 3000), (3,4000), (4, 2000)]
@@ -202,7 +211,7 @@ def test_population():
     pprint(fleet)
     
     pop = Population(hhsize, fleet, prog)
-    pop.create_households(land, demand)
+    pop.create_households(land, dm)
     
     print "\nhousehold programs"
     pprint(count_objects(pop.households, "program"))
@@ -221,16 +230,24 @@ def test_population():
     return pop
 
 
+def test_scheduler(land, pop):
+    import scheduler
+    
+    scheduler.traverse_indvidual_states(pop.adults[0], land)
+    scheduler.traverse_indvidual_states(pop.children[0], land)
+    scheduler.individual_schedule(pop, net, router, land, None)
+
+
 def main():
     test_config()
-    # dm0 = test_demand()
-    # net0 = test_network()
+    dm0 = test_demand()
+    net0 = test_network()
     # gnet0 = test_drawing()
-    # path0 = test_router()
-    # land0 = test_landuse()
-    # pop0 = test_population()
+    land0 = test_landuse(dm0, net0)
+    path0 = test_router(net0, land0)
+    pop0 = test_population(dm0, land0)
+    # test_scheduler()
 
 
 if __name__ == '__main__':
-    # python -m cProfile -s time -o profile.log tests.py <args>
     main()
