@@ -68,13 +68,16 @@ class Activity(object):
         upper = lower + Config.TIMEUNIT
         if tick == 0:
             util = quad(self._marginal_util, [0.0, Config.TIMEUNIT/2.0]) + \
-                   quad(self._marginal_util, [Config.DAY-Config.TIMEUNIT/2.0, Config.DAY])
+                   quad(self._marginal_util, [Config.TIMELENG-Config.TIMEUNIT/2.0, Config.TIMELENG])
         else:
             util = quad(self._marginal_util, [lower, upper])
         return util
     
     def calc_schedule_delay(self, tick):
         return 0.0
+    
+    def within_time_window(self, tick):
+        return tick > self.time_window[0] and tick < self.time_window[1]
 
 
 class Mandatory(Activity):

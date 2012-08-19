@@ -60,6 +60,10 @@ class Time(object):
         if math.isinf(tick):
             return tick
         return float(tick) * Config.TIMEUNIT
+    
+    @classmethod
+    def lessthan_maxtick(cls, tick):
+        return tick < Config.MAXTICK
 
 
 def main():
