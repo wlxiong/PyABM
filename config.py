@@ -4,15 +4,11 @@ import math
 
 
 class Config(object):
-    # equivalent minutes of a tick
-    TIMEUNIT = 20
-    
     @classmethod
     def init(cls, settings):
         for var in settings:
+            # initialize the object attributes with settings
             setattr(cls, var, settings[var])
-        # the maximum value of tick
-        cls.MAXTICK = cls.TIMELENG // cls.TIMEUNIT
         # convert time unit from minute to hour
         cls.min2hr = 1.0/60.0
         cls.ALPHA_in    *= cls.min2hr

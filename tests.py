@@ -2,6 +2,7 @@
 from pprint import pprint, pformat
 from utils import create_objects
 from utils import logger
+from utils import Time
 from config import Config
 import itertools
 
@@ -10,7 +11,9 @@ def test_config():
     from config import Config
     
     settings = {
+        # equivalent minutes of a tick
         'TIMEUNIT': 20,
+        # the length of simulation
         'TIMELENG': 1440,
         # variance tolerance of preferred activitiy timing
         'DELTA': 0.25 * 60.0,
@@ -60,6 +63,7 @@ def test_config():
     }
     # logger.debug(pformat(settings))
     Config.init(settings)
+    Time.init(Config.TIMELENG, Config.TIMEUNIT)
 
 
 def test_demand():

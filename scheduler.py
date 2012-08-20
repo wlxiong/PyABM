@@ -11,7 +11,7 @@ State = namedtuple('State', 'tick, activity, location, elapsed, joint, todo')
 
 
 def traverse_indvidual_states(person, locations):
-    for tick in xrange(Config.MAXTICK-1,-1,-1):
+    for tick in xrange(Time.MAXTICK-1,-1,-1):
         for activity in person.program:
             if not activity.within_time_window(tick):
                 continue

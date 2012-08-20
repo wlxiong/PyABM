@@ -1,7 +1,6 @@
 from __future__ import division
 import math
 import itertools
-from config import Config
 
 
 # debug logging
@@ -53,17 +52,23 @@ class Time(object):
     def min2tick(cls, minute):
         if math.isinf(minute):
             return minute
-        return int(math.floor((minute / Config.TIMEUNIT) + 0.5))
+        return int(math.floor((minute / cls.TIMEUNIT) + 0.5))
 
     @classmethod
     def tick2min(cls, tick):
         if math.isinf(tick):
             return tick
-        return float(tick) * Config.TIMEUNIT
+        return float(tick) * cls.TIMEUNIT
     
     @classmethod
     def lessthan_maxtick(cls, tick):
-        return tick < Config.MAXTICK
+        return tick < cls.MAXTICK
+    
+    @classmethod
+    def init(cls, timeleng, timeunit):
+        cls.TIMELENG, cls.TIMEUNIT = timeleng, timeunit
+        # the maximum value of tick
+        cls.MAXTICK = cls.TIMELENG // cls.TIMEUNIT
 
 
 def main():
@@ -73,6 +78,9 @@ def main():
         print (i, j)
     for i, j in np.ndindex(*ij):
         print (i, j)
+    
+    Time.init(1000, 10)
+    print "max tick: %d" % Time.MAXTICK
 
 if __name__ == '__main__':
     main()

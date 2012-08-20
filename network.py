@@ -74,7 +74,7 @@ class Network(object):
         self.trans[id_] = Transit(id_, timetable, stop_list, fare_matrix, capacity)
     
     def init_flows(self):
-        self.flows = np.zeros([len(self.edges), Config.MAXTICK])
+        self.flows = np.zeros([len(self.edges), Time.MAXTICK])
 
 
 class Node(object):
