@@ -19,7 +19,7 @@ class Demand(object):
     
     def add_program(self, id_, activity_names):
         activities = [self.activities[name] for name in activity_names]
-        self.programs[id_] = Program(id_, activities)
+        self.programs[id_] = tuple(activities)
     
     def get_activity(self, name):
         try:
@@ -48,7 +48,7 @@ class Activity(object):
         self.min_duration = Time.min2tick(min_duration)
 
     def __repr__(self):
-        return "AC%d" % self.id
+        return self.name
     
     def __str__(self):
         return self.name
@@ -96,14 +96,3 @@ class Mandatory(Activity):
             return late_time * self.late_penalty
         return 0.0
         
-
-class Program(list):
-    def __init__(self, id_, iterable):
-        self.id = id_
-        super(Program, self).__init__(iterable)
-    
-    def __repr__(self):
-        return "PG%d" % self.id
-    
-    def __hash__(self):
-        return hash(repr(self))

@@ -78,12 +78,12 @@ class Population(object):
         # create adults and children for the household
         # all the adults are worker and all the children are students
         for _ in xrange(wknum):
-            program = [ihome, iwork] + household.program
+            program = (ihome, iwork) + household.program
             adult = add_object2pool(household.add_adult, self.individuals, 
                                     household.residence, it_office.next(), program)
             self.adults.append(adult)
         for _ in xrange(stnum):
-            program = [ihome, ischool] + household.program
+            program = (ihome, ischool) + household.program
             child = add_object2pool(household.add_child, self.individuals, 
                                     household.residence, it_school.next(), program)
             self.children.append(child)
