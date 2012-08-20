@@ -8,7 +8,6 @@ import itertools
 
 
 def test_config():
-    from config import Config
     
     settings = {
         # equivalent minutes of a tick
@@ -86,6 +85,15 @@ def test_demand():
     create_objects(dm.add_activity, activity_data)
     print 'activities:'
     pprint(dm.activities.items())
+    
+    print "activity utility"
+    dm.build_activity_util()
+    logger.info('activity utility: home')
+    logger.debug(pformat(dm.get_activity_util(dm.activities["home"])))
+    logger.info('activity utility: work')
+    logger.debug(pformat(dm.get_activity_util(dm.activities["work"])))
+    logger.info('activity utility: shopping')
+    logger.debug(pformat(dm.get_activity_util(dm.activities["shopping"])))
     
     # intra-household interactions
     #   entire day level: 
@@ -198,8 +206,8 @@ def test_population(dm, land):
         from collections import defaultdict
         
         print "random objects"
-        print pformat([(obj, obj.__getattribute__(target)) for obj in pool[:5]])
-        print pformat([(obj, obj.__getattribute__(target)) for obj in pool[-5:]])
+        pprint([(obj, obj.__getattribute__(target)) for obj in pool[:5]])
+        pprint([(obj, obj.__getattribute__(target)) for obj in pool[-5:]])
         print "object groups"
         counts = defaultdict(int)
         for obj in pool:
@@ -243,8 +251,8 @@ def test_population(dm, land):
 def test_scheduler(net, land, router, pop):
     import scheduler
     
-    scheduler.traverse_indvidual_states(pop.adults[0], land)
-    scheduler.traverse_indvidual_states(pop.children[0], land)
+    scheduler.individual_states(pop.adults[0], land)
+    scheduler.individual_states(pop.children[0], land)
     scheduler.individual_schedule(pop, net, land, router, None)
 
 
