@@ -5,9 +5,9 @@ import itertools
 
 # debug logging
 import logging
-logger = logging.getLogger('debug_log')
+logger = logging.getLogger('test')
 logger.setLevel(logging.DEBUG)
-logging.basicConfig(filename='debug.log')
+logging.basicConfig(filename='debug.log', filemode='w')
 
 
 def sorted_dict_values(adict):

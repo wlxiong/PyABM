@@ -77,15 +77,15 @@ class Population(object):
         ischool = demand.get_activity("school")
         # create adults and children for the household
         # all the adults are worker and all the children are students
+        adult_program = (ihome, iwork) + household.program
         for _ in xrange(wknum):
-            program = (ihome, iwork) + household.program
             adult = add_object2pool(household.add_adult, self.individuals, 
-                                    household.residence, it_office.next(), program)
+                                    household.residence, it_office.next(), adult_program)
             self.adults.append(adult)
+        child_program = (ihome, ischool) + household.program
         for _ in xrange(stnum):
-            program = (ihome, ischool) + household.program
             child = add_object2pool(household.add_child, self.individuals, 
-                                    household.residence, it_school.next(), program)
+                                    household.residence, it_school.next(), child_program)
             self.children.append(child)
         return household
     
@@ -100,11 +100,11 @@ class Population(object):
         # calculate the number of workers
         # if the size of a household is one, this one person is a worker
         # if the size of a household is larger than one, there a two workers
-        wknum = sum([(2 if size > 3 else size) * freq for size, freq in self.size_freq])
+        wknum = sum(((2 if size > 3 else size) * freq for size, freq in self.size_freq))
         # calculate the number of students, all the other persons are students
-        stnum = sum([(0 if size < 3 else size - 2) * freq for size, freq in self.size_freq])
+        stnum = sum(((0 if size < 3 else size - 2) * freq for size, freq in self.size_freq))
         # assign random activity program to the households
-        program_freq = dict([(demand.programs[id_], freq) for id_, freq in self.prog_freq])
+        program_freq = dict(((demand.programs[id_], freq) for id_, freq in self.prog_freq))
         programs = self._get_assignments(program_freq, hhnum)
         # assign random dwelling unit to the households
         residences = self._get_assignments(land.get_capacities("home"), hhnum)
