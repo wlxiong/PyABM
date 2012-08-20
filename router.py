@@ -86,8 +86,10 @@ class Router(object):
         else:
             # if end node is not given, extract the shortest paths from start to all the other nodes
             paths = cls.create_all_shortest_paths(start, prev, time)
-            tuples = {}
+            # no path is defined for a ring and the travel time/cost is zero
+            tuples = {start.id: (None, 0.0, 0.0)}
             for id_ in paths:
+                # wrap the path, cost and time in a tuple
                 tuples[id_] = (paths[id_], cost[id_], time[id_])
             return tuples
     

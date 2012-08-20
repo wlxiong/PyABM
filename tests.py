@@ -177,6 +177,12 @@ def test_router(net, land):
     pprint(paths)
     router = Router(net, land)
     router.build_shortest_paths()
+    path = router.get_shortest_path(0, 100, 100)
+    print 'path 100 - 100'
+    pprint(path)
+    path = router.get_shortest_path(0, 100, 200)
+    print 'path 100 - 200'
+    pprint(path)
     path = router.get_shortest_path(0, 100, 600)
     print 'path 100 - 600'
     pprint(path)
@@ -245,7 +251,7 @@ def main():
     # gnet0 = test_drawing()
     land0 = test_landuse(dm0, net0)
     path0 = test_router(net0, land0)
-    pop0 = test_population(dm0, land0)
+    # pop0 = test_population(dm0, land0)
     # test_scheduler()
 
 
