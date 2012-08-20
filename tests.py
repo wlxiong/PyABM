@@ -236,12 +236,12 @@ def test_population(dm, land):
     return pop
 
 
-def test_scheduler(land, pop):
+def test_scheduler(net, land, router, pop):
     import scheduler
     
     scheduler.traverse_indvidual_states(pop.adults[0], land)
     scheduler.traverse_indvidual_states(pop.children[0], land)
-    scheduler.individual_schedule(pop, net, router, land, None)
+    scheduler.individual_schedule(pop, net, land, router, None)
 
 
 def main():
@@ -250,9 +250,9 @@ def main():
     net0 = test_network()
     # gnet0 = test_drawing()
     land0 = test_landuse(dm0, net0)
-    path0 = test_router(net0, land0)
-    # pop0 = test_population(dm0, land0)
-    # test_scheduler()
+    router0 = test_router(net0, land0)
+    pop0 = test_population(dm0, land0)
+    test_scheduler(net0, land0, router0, pop0)
 
 
 if __name__ == '__main__':
