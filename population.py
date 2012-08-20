@@ -157,8 +157,11 @@ class Individual(object):
     def __eq__(self, other):
         return repr(self.id) == repr(other.id)
     
+    def get_residence(self):
+        return self.residence
+    
     def get_workplace(self):
-        pass
+        raise NotImplementedError
 
 
 class Adult(Individual):
