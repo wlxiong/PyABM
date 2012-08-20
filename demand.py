@@ -1,9 +1,7 @@
 # Activity class
 from __future__ import division
-import math
-from mpmath import quad
+from mpmath import fp
 from utils import Time
-from config import Config
 from collections import OrderedDict
 
 
@@ -11,7 +9,8 @@ class Demand(object):
     "Demand is a pool of activities. "
     def __init__(self):
         self.activities = OrderedDict()
-        self.programs = {}
+        self.programs = OrderedDict()
+        self.activity_utils = OrderedDict()
 
     def add_activity(self, name, U0, Um, Sigma, Lambda, Xi, time_window, min_duration=0.0):
         id_ = len(self.activities)
@@ -26,6 +25,22 @@ class Demand(object):
             return self.activities[name]
         except KeyError, e:
             raise e
+    
+    def build_activity_util(self):
+        for name, activity in self.activities.items():
+            print name
+            args = [(tick, elapsed) for tick in xrange(Time.MAXTICK)
+                                    for elapsed in xrange(tick)
+                                    if  activity.within_time_window(tick - elapsed)]
+            ticks, elapsed = tuple(zip(*args))
+            utils = map(activity.discrete_util, ticks, elapsed)
+            self.activity_utils[name] = dict(zip(args, utils))
+    
+    def get_activity_util(self, activity, tick=None, elapsed=0.0):
+        if tick == None:
+            return self.activity_utils[activity.name]
+        else:
+            return self.activity_utils[activity.name][(tick, elapsed)]
 
 
 class Activity(object):
@@ -56,21 +71,21 @@ class Activity(object):
     def __eq__(self, other):
         return self.id == other.id
 
-    def _marginal_util(self, time, elapsed=0):
+    def _marginal_util(self, time, elapsed=0.0):
         "The marginal activity utility is a function of the current time and the elapsed time. "
         nominator = self.Sigma*self.Lambda*self.Um
-        denominator = (math.exp( self.Sigma*(time-self.Xi) ) *
-            math.pow(1.0+math.exp( -self.Sigma*(time-self.Xi) ), self.Lambda+1.0) )
+        denominator = (fp.exp( self.Sigma*(time-self.Xi) ) *
+            fp.power(1.0+fp.exp( -self.Sigma*(time-self.Xi) ), self.Lambda+1.0) )
         return self.U0 + nominator/denominator
 
-    def discrete_util(self, tick):
-        lower = Time.tick2min(tick) - Config.TIMEUNIT/2.0
-        upper = lower + Config.TIMEUNIT
+    def discrete_util(self, tick, elapsed=0.0):
+        lower = Time.tick2min(tick) - Time.TIMEUNIT/2.0
+        upper = lower + Time.TIMEUNIT
         if tick == 0:
-            util = quad(self._marginal_util, [0.0, Config.TIMEUNIT/2.0]) + \
-                   quad(self._marginal_util, [Config.TIMELENG-Config.TIMEUNIT/2.0, Config.TIMELENG])
+            util = fp.quad(self._marginal_util, [0.0, Time.TIMEUNIT/2.0]) + \
+                   fp.quad(self._marginal_util, [Time.TIMELENG-Time.TIMEUNIT/2.0, Time.TIMELENG])
         else:
-            util = quad(self._marginal_util, [lower, upper])
+            util = fp.quad(self._marginal_util, [lower, upper])
         return util
     
     def calc_schedule_delay(self, tick):
