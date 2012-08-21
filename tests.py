@@ -86,7 +86,7 @@ def test_demand():
     print 'activities:'
     pprint(dm.activities.items())
     
-    print "activity utility"
+    print "building activity utility..."
     dm.build_activity_util()
     logger.info('activity utility: home')
     logger.debug(pformat(dm.get_activity_util(dm.activities["home"])))
@@ -188,6 +188,7 @@ def test_router(net, land):
     print 'paths 100 - *'
     pprint(paths)
     router = Router(net, land)
+    print 'building shortest paths...'
     router.build_shortest_paths()
     path = router.get_shortest_path(0, 100, 100)
     print 'path 100 - 100'
@@ -248,12 +249,13 @@ def test_population(dm, land):
     return pop
 
 
-def test_scheduler(net, land, router, pop):
-    import scheduler
+def test_scheduler(dm, net, land, router, pop):
+    from scheduler import Scheduler
     
-    scheduler.individual_states(pop.adults[0], land)
-    scheduler.individual_states(pop.children[0], land)
-    scheduler.individual_schedule(pop, net, land, router, None)
+    Scheduler.individual_states(pop.adults[0], land)
+    Scheduler.individual_states(pop.children[0], land)
+    print "scheduling individuals' activities..."
+    Scheduler.individual_schedule(dm, net, land, router, pop)
 
 
 def main():
@@ -264,7 +266,7 @@ def main():
     land0 = test_landuse(dm0, net0)
     router0 = test_router(net0, land0)
     pop0 = test_population(dm0, land0)
-    test_scheduler(net0, land0, router0, pop0)
+    test_scheduler(dm0, net0, land0, router0, pop0)
 
 
 if __name__ == '__main__':
