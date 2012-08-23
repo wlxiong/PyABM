@@ -98,7 +98,7 @@ class Router(object):
         self.paths = defaultdict(dict)
     
     def build_shortest_paths(self):
-        for tick in xrange(Time.min2tick(Time.TIMELENG)-1,-1,-1):
+        for tick in xrange(Time.MAXTICK):
             for origin in self.network.locations.values():
                 self.paths[tick][origin.id] = self.find_shortest_path(self.network, tick, origin)
     
