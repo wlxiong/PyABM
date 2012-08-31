@@ -190,6 +190,7 @@ def test_router(net, land):
     router = Router(net, land)
     print 'building shortest paths...'
     router.build_shortest_paths()
+    # logger.debug(pformat(dict(router.paths)))
     path = router.get_shortest_path(0, 100, 100)
     print 'path 100 - 100'
     pprint(path)
