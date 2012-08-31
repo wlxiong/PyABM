@@ -43,7 +43,7 @@ class Router(object):
     @classmethod
     def find_shortest_path(cls, net, depart_time, start, end=None):
         if end != None and start == end:
-            return {end.id: (None, 0.0, 0.0)}
+            return {end.id: (None, 0.0, depart_time)}
         # creater a FIFO queue for searching
         queue = deque()
         # create containers with default values
@@ -87,9 +87,11 @@ class Router(object):
             # if end node is not given, extract the shortest paths from start to all the other nodes
             paths = cls.create_all_shortest_paths(start, prev, time)
             # no path is defined for a ring and the travel time/cost is zero
-            tuples = {start.id: (None, 0.0, 0.0)}
+            tuples = {start.id: (None, 0.0, depart_time)}
             for id_ in paths:
                 # wrap the path, cost and time in a tuple
+                # note that time[id_] is the arrival time at node[id_]
+                # that is, time[id_] = depart_time + travel_time
                 tuples[id_] = (paths[id_], cost[id_], time[id_])
             return tuples
     
@@ -98,7 +100,7 @@ class Router(object):
         self.paths = defaultdict(dict)
     
     def build_shortest_paths(self):
-        for tick in xrange(Time.MAXTICK):
+        for tick in xrange(Time.MAXTICK+1):
             for origin in self.network.locations.values():
                 self.paths[tick][origin.id] = self.find_shortest_path(self.network, tick, origin)
     

@@ -30,7 +30,7 @@ class Demand(object):
         for name, activity in self.activities.items():
             print name
             args = [(tick, elapsed) for tick in xrange(Time.MAXTICK)
-                                    for elapsed in xrange(tick)
+                                    for elapsed in xrange(tick + 1)
                                     if  activity.within_time_window(tick - elapsed)]
             ticks, elapsed = tuple(zip(*args))
             utils = map(activity.discrete_util, ticks, elapsed)
