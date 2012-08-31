@@ -153,6 +153,8 @@ class Individual(object):
     """
     def __init__(self, id_, residence):
         self.id, self.residence = id_, residence
+        self.transitions = {}
+        self.states = []
     
     def __eq__(self, other):
         return repr(self.id) == repr(other.id)

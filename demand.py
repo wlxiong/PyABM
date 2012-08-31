@@ -92,7 +92,7 @@ class Activity(object):
         return 0.0
     
     def within_time_window(self, tick):
-        return tick > self.time_window[0] and tick < self.time_window[1]
+        return tick >= self.time_window[0] and tick < self.time_window[1]
 
 
 class Mandatory(Activity):
